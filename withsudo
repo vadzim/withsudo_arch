@@ -1,0 +1,24 @@
+#!/bin/bash
+
+if ! type -p sudo >/dev/null; then
+    echo Error: no sudo executable found. Please install it with e.g. \'pacman -S sudo\'.>&2
+    exit 1
+fi
+
+user=withsudo
+
+useradd -M $user
+usermod -LaG wheel $user
+
+echo $'[User]\nSystemAccount=true' > /var/lib/AccountsService/users/$user
+echo 'Defaults:'$user' !authenticate' > /etc/sudoers.d/99-$user
+
+rm -rf /home/$user
+mkdir -p /home/$user
+chown $user: /home/$user
+
+sudo -u $user "$@"
+
+rm -rf /home/$user
+rm /etc/sudoers.d/99-$user
+userdel $user
